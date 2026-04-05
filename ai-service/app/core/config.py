@@ -6,6 +6,8 @@ class Settings(BaseSettings):
 
     llm_name: str = "gpt-4o-mini"
     minimum_keyword_count: int = 15
+    openai_api_key: str = ""  # Will be set from env
+    debug: bool = False
 
 
 settings = Settings()

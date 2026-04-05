@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 
-from app.api.v1.routes_analysis import router as analysis_router
+from app.routers import router
 
-app = FastAPI(title="Resume Optimizer AI Service", version="0.1.0")
-app.include_router(analysis_router, prefix="/api/v1", tags=["analysis"])
+app = FastAPI(title="Resume Optimizer AI Service", version="0.2.0")
+app.include_router(router)
 
 
 @app.get("/health")
