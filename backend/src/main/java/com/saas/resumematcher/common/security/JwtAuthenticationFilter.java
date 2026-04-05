@@ -40,18 +40,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       return;
     }
 
-    String jwt = authHeader.substring(7);
-    String username = jwtService.extractUsername(jwt);
+    try {
+      String jwt = authHeader.substring(7);
+      String username = jwtService.extractUsername(jwt);
 
-    if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-      UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-      if (jwtService.isTokenValid(jwt, userDetails)) {
-        UsernamePasswordAuthenticationToken authToken =
-            new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
-        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-        SecurityContextHolder.getContext().setAuthentication(authToken);
+      if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        if (jwtService.isTokenValid(jwt, userDetails)) {
+          UsernamePasswordAuthenticationToken authToken =
+              new UsernamePasswordAuthenticationToken(
+                  userDetails, null, userDetails.getAuthorities());
+          authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+          SecurityContextHolder.getContext().setAuthentication(authToken);
+        }
       }
+    } catch (Exception e) {
+      // JWT parsing or validation failed, continue without authentication
+      // This allows login/register endpoints to be accessed without a valid token
     }
 
     filterChain.doFilter(request, response);
