@@ -1,53 +1,124 @@
-version: "3.9"
-
 services:
+  # PostgreSQL Database
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
+    container_name: resume-optimizer-db
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-resume_optimizer}
       POSTGRES_USER: ${POSTGRES_USER:-resume_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resume_password}
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-resume_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saas-network
 
+  # Python FastAPI AI Service
   ai-service:
     build:
       context: ..
       dockerfile: docker/ai-service.Dockerfile
+    container_name: resume-optimizer-ai
     environment:
-      AI_MODEL_NAME: gpt-4o-mini
-      AI_MINIMUM_KEYWORD_COUNT: 15
+      # API Configuration
+      AI_OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      AI_LLM_NAME: ${AI_LLM_NAME:-gpt-4o-mini}
+      AI_DEBUG: ${AI_DEBUG:-false}
+      # Service Configuration
+      AI_MINIMUM_KEYWORD_COUNT: ${AI_MINIMUM_KEYWORD_COUNT:-15}
+      PYTHONUNBUFFERED: 1
     ports:
       - "8000:8000"
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/docs').read()\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - saas-network
+    volumes:
+      - ai-service-logs:/app/logs
 
+  # Spring Boot Backend API
   backend:
     build:
       context: ..
       dockerfile: docker/backend.Dockerfile
+    container_name: resume-optimizer-backend
     environment:
+      # Database Configuration
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-resume_optimizer}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-resume_user}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-resume_password}
+      # JWT Configuration
       JWT_SECRET: ${JWT_SECRET:-cmVwbGFjZV93aXRoX2F0X2xlYXN0XzMyX2NoYXJzX2Jhc2U2NF9zZWNyZXQ=}
       JWT_EXPIRATION_SECONDS: ${JWT_EXPIRATION_SECONDS:-3600}
+      # AI Service Configuration
       AI_SERVICE_BASE_URL: http://ai-service:8000
-    depends_on:
-      - postgres
-      - ai-service
+      # Spring Configuration
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: false
+      SPRING_APPLICATION_NAME: resume-optimizer-backend
     ports:
       - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      - saas-network
+    volumes:
+      - backend-logs:/app/logs
 
+  # Angular Frontend
   frontend:
     build:
       context: ..
       dockerfile: docker/frontend.Dockerfile
+    container_name: resume-optimizer-frontend
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "4200:80"
+    environment:
+      API_URL: http://backend:8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - saas-network
 
 volumes:
   postgres_data:
+    driver: local
+  ai-service-logs:
+    driver: local
+  backend-logs:
+    driver: local
+
+networks:
+  saas-network:
+    driver: bridge
 

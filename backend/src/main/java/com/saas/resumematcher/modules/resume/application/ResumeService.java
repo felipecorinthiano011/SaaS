@@ -18,8 +18,8 @@ public class ResumeService {
     ResumeEntity entity =
         ResumeEntity.builder()
             .userEmail(userEmail)
-            .fileName(request.fileName())
-            .extractedText(request.extractedText())
+            .fileName(request.fileName() != null ? request.fileName() : "resume")
+            .extractedText(request.extractedText() != null ? request.extractedText() : "")
             .fileContent(fileContent)
             .mimeType(mimeType)
             .uploadedAt(Instant.now())
@@ -32,7 +32,8 @@ public class ResumeService {
         saved.getFileName(),
         saved.getUserEmail(),
         saved.getUploadedAt(),
-        "Resume uploaded successfully");
+        "Resume uploaded successfully",
+        saved.getExtractedText());
   }
 
   public ResumeDtos.ResumeDetailResponse getResume(Long resumeId, String userEmail) {

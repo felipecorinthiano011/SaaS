@@ -32,8 +32,9 @@ public class AnalysisController {
   @GetMapping("/{id}")
   public ResponseEntity<AnalysisDtos.AnalyzeResponse> getAnalysis(
       @PathVariable Long id, Authentication authentication) {
-    // TODO: Implement getAnalysis with proper authorization check
-    return ResponseEntity.ok(null);
+    AnalysisDtos.AnalyzeResponse response =
+        analysisService.getAnalysis(id, authentication.getName());
+    return ResponseEntity.ok(response);
   }
 
   @GetMapping

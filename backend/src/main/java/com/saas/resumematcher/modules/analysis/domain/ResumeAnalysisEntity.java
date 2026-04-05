@@ -5,7 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
@@ -30,30 +29,31 @@ public class ResumeAnalysisEntity {
   @Column(nullable = false)
   private String userEmail;
 
-  @Column(nullable = false)
+  @Column  // nullable - frontend may not send resumeId
   private Long resumeId;
 
-  @Lob
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "TEXT")
   private String jobDescription;
 
-  @Lob
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "TEXT")
   private String resumeText;
 
   @Column(nullable = false)
   private Integer atsScore;
 
-  @Lob
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "TEXT")
   private String extractedKeywords;
 
-  @Lob
-  @Column(nullable = false)
+  @Column(columnDefinition = "TEXT")
+  private String missingKeywords;
+
+  @Column(columnDefinition = "TEXT")
+  private String suggestionsJson;
+
+  @Column(nullable = false, columnDefinition = "TEXT")
   private String optimizedResume;
 
-  @Lob
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "TEXT")
   private String gapSummary;
 
   @Column(nullable = false)

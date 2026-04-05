@@ -1,0 +1,156 @@
+/* Dashboard Component Styles */
+
+:host {
+  display: block;
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sticky {
+    position: static;
+  }
+}
+
+/* Animation for loading spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* File upload drag and drop */
+.drag-over {
+  @apply border-blue-500 bg-blue-50;
+}
+
+/* Tab styling */
+.tab-active {
+  @apply border-b-2 border-blue-600 text-blue-600;
+}
+
+/* Score color classes */
+.score-excellent {
+  @apply text-green-600;
+}
+
+.score-good {
+  @apply text-yellow-600;
+}
+
+.score-fair {
+  @apply text-orange-600;
+}
+
+.score-poor {
+  @apply text-red-600;
+}
+
+/* Progress bar for ATS score */
+.progress-bar {
+  @apply h-2 bg-gray-200 rounded-full overflow-hidden;
+}
+
+.progress-fill {
+  @apply h-full bg-blue-600 transition-all duration-500;
+}
+
+/* Keyword tags */
+.keyword-tag {
+  @apply inline-block px-3 py-1 rounded-full text-sm font-medium cursor-pointer transition-colors;
+}
+
+.keyword-tag-missing {
+  @apply bg-red-100 text-red-800 hover:bg-red-200;
+}
+
+.keyword-tag-matched {
+  @apply bg-green-100 text-green-800 hover:bg-green-200;
+}
+
+/* Suggestion cards */
+.suggestion-card {
+  @apply border-l-4 pl-4 py-2;
+}
+
+.suggestion-high {
+  @apply border-red-500;
+}
+
+.suggestion-medium {
+  @apply border-yellow-500;
+}
+
+.suggestion-low {
+  @apply border-green-500;
+}
+
+/* Resume text preview */
+.resume-preview {
+  @apply bg-gray-50 rounded-lg p-4 border border-gray-300 max-h-96 overflow-y-auto;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Button states */
+button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+button:hover:not(:disabled) {
+  @apply transition-all duration-200;
+}
+
+/* Form inputs */
+textarea {
+  @apply resize-none;
+}
+
+textarea:focus {
+  @apply ring-2 ring-blue-500 ring-offset-0;
+}
+
+/* Alert messages */
+.alert {
+  @apply rounded-lg p-4 border;
+}
+
+.alert-error {
+  @apply bg-red-100 border-red-400 text-red-700;
+}
+
+.alert-success {
+  @apply bg-green-100 border-green-400 text-green-700;
+}
+
+.alert-warning {
+  @apply bg-yellow-100 border-yellow-400 text-yellow-700;
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  :host {
+    color-scheme: dark;
+  }
+}
+

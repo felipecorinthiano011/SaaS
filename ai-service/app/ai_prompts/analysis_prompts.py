@@ -1,7 +1,7 @@
 """AI Prompt templates for resume analysis."""
 
 EXTRACT_KEYWORDS_PROMPT = """
-You are an expert ATS (Applicant Tracking System) analyst.
+You are an expert ATS (Applicant Tracking System) analyst. 
 Extract the most important technical and non-technical keywords from the following job description.
 Focus on skills, tools, technologies, certifications, and experiences that an ATS system would look for.
 

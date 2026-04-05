@@ -2,6 +2,7 @@ package com.saas.resumematcher.modules.resume.api;
 
 import com.saas.resumematcher.modules.resume.application.ResumeDtos;
 import com.saas.resumematcher.modules.resume.application.ResumeService;
+import com.saas.resumematcher.modules.resume.infra.AiTextExtractClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,21 +23,25 @@ import java.util.List;
 public class ResumeController {
 
   private final ResumeService resumeService;
+  private final AiTextExtractClient aiTextExtractClient;
 
   @PostMapping("/upload")
   public ResponseEntity<ResumeDtos.UploadResponse> uploadResume(
       Authentication authentication,
-      @RequestParam("file") MultipartFile file,
-      @RequestParam("extractedText") String extractedText)
+      @RequestParam("file") MultipartFile file)
       throws IOException {
     String userEmail = authentication.getName();
     String mimeType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+    byte[] fileBytes = file.getBytes();
+
+    // Call AI service to extract text from the file (falls back to "" if unavailable)
+    String extractedText = aiTextExtractClient.extractText(fileBytes, file.getOriginalFilename());
 
     ResumeDtos.UploadResponse response =
         resumeService.uploadResume(
             userEmail,
             new ResumeDtos.UploadRequest(file.getOriginalFilename(), extractedText),
-            file.getBytes(),
+            fileBytes,
             mimeType);
 
     return ResponseEntity.ok(response);

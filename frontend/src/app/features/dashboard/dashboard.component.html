@@ -1,64 +1,361 @@
-<main class="mx-auto max-w-5xl p-6">
-  <section class="rounded-xl bg-white p-6 shadow">
-    <h1 class="text-2xl font-bold">LinkedIn Resume Optimizer</h1>
-    <p class="mt-2 text-sm text-slate-600">
-      Paste the job description and resume content to get ATS keyword and match insights.
-    </p>
-
-    <form (ngSubmit)="submit()" class="mt-6 space-y-4">
-      <div>
-        <label for="jobDescription" class="mb-1 block text-sm font-medium">LinkedIn Job Description</label>
-        <textarea
-          id="jobDescription"
-          name="jobDescription"
-          [(ngModel)]="jobDescription"
-          class="min-h-40 w-full rounded-lg border border-slate-300 p-3"
-          required
-        ></textarea>
+<div class="min-h-screen bg-gray-50">
+  <!-- Navigation Header -->
+  <nav class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center">
+          <h1 class="text-2xl font-bold text-blue-600">ResumeMatcher</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="text-sm text-gray-700">{{ currentUserEmail }}</span>
+          <button
+            (click)="logout()"
+            class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition"
+          >
+            Logout
+          </button>
+        </div>
       </div>
+    </div>
+  </nav>
 
-      <div>
-        <label for="resumeText" class="mb-1 block text-sm font-medium">Resume Text</label>
-        <textarea
-          id="resumeText"
-          name="resumeText"
-          [(ngModel)]="resumeText"
-          class="min-h-40 w-full rounded-lg border border-slate-300 p-3"
-          required
-        ></textarea>
-      </div>
-
-      <button
-        type="submit"
-        [disabled]="isLoading"
-        class="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-60"
-      >
-        {{ isLoading ? 'Analyzing...' : 'Analyze Resume' }}
-      </button>
-    </form>
-
-    <p *ngIf="errorMessage" class="mt-4 text-sm text-red-600">{{ errorMessage }}</p>
-  </section>
-
-  <section *ngIf="analysis" class="mt-6 rounded-xl bg-white p-6 shadow">
-    <h2 class="text-xl font-semibold">Analysis Result</h2>
-    <p class="mt-2">ATS Match Score: <strong>{{ analysis.atsScore }}%</strong></p>
-
-    <h3 class="mt-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Extracted Keywords</h3>
-    <div class="mt-2 flex flex-wrap gap-2">
-      <span
-        *ngFor="let keyword of analysis.extractedKeywords"
-        class="rounded-full bg-indigo-50 px-3 py-1 text-sm text-indigo-700"
-      >
-        {{ keyword }}
-      </span>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Alert Messages -->
+    <div *ngIf="errorMessage" class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex justify-between items-center">
+      <span>{{ errorMessage }}</span>
+      <button (click)="errorMessage = ''" class="text-red-700 hover:text-red-900">×</button>
     </div>
 
-    <h3 class="mt-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Gap Summary</h3>
-    <p class="mt-2 text-sm">{{ analysis.gapSummary }}</p>
+    <div *ngIf="successMessage" class="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex justify-between items-center">
+      <span>{{ successMessage }}</span>
+      <button (click)="successMessage = ''" class="text-green-700 hover:text-green-900">×</button>
+    </div>
 
-    <h3 class="mt-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Optimized Resume Draft</h3>
-    <pre class="mt-2 overflow-auto rounded-lg bg-slate-100 p-3 text-sm">{{ analysis.optimizedResume }}</pre>
-  </section>
-</main>
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Input Section -->
+      <div class="lg:col-span-2">
+        <!-- Tabs -->
+        <div class="flex space-x-2 mb-6 border-b border-gray-300">
+          <button
+            (click)="activeTab = 'input'"
+            [class.border-b-2]="activeTab === 'input'"
+            [class.border-blue-600]="activeTab === 'input'"
+            class="px-4 py-2 font-medium text-gray-700 hover:text-gray-900"
+          >
+            Input
+          </button>
+          <button
+            *ngIf="analysis"
+            (click)="activeTab = 'results'"
+            [class.border-b-2]="activeTab === 'results'"
+            [class.border-blue-600]="activeTab === 'results'"
+            class="px-4 py-2 font-medium text-gray-700 hover:text-gray-900"
+          >
+            Results
+          </button>
+        </div>
 
+        <!-- Input Tab -->
+        <div *ngIf="activeTab === 'input'" class="space-y-6">
+          <!-- Job Description -->
+          <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Job Description</h2>
+            <textarea
+              [(ngModel)]="jobDescription"
+              placeholder="Paste the job description here..."
+              class="w-full h-40 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+            ></textarea>
+            <p class="text-xs text-gray-500 mt-2">Minimum 50 characters</p>
+          </div>
+
+          <!-- Resume -->
+          <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Your Resume</h2>
+
+            <!-- File Upload -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Upload Resume (PDF or DOCX)
+              </label>
+              <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition">
+                <input
+                  type="file"
+                  #fileInput
+                  (change)="onFileSelected($event)"
+                  accept=".pdf,.docx"
+                  class="hidden"
+                />
+                <div (click)="fileInput.click()" class="space-y-2">
+                  <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <p class="text-sm text-gray-600">
+                    <span class="font-semibold text-blue-600">Click to upload</span> or drag and drop
+                  </p>
+                  <p class="text-xs text-gray-500">PDF or DOCX up to 10MB</p>
+                </div>
+              </div>
+              <div *ngIf="isUploading" class="mt-4 flex items-center text-sm text-gray-600">
+                <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Uploading and extracting text...
+              </div>
+              <div *ngIf="selectedFile && !isUploading" class="mt-4 flex items-center text-sm text-green-600">
+                <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                {{ selectedFile.name }}
+              </div>
+            </div>
+
+            <!-- Or Manual Input -->
+            <div class="relative mb-4">
+              <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-gray-300"></div>
+              </div>
+              <div class="relative flex justify-center text-sm">
+                <span class="px-2 bg-white text-gray-500">or</span>
+              </div>
+            </div>
+
+            <!-- Manual Resume Input -->
+            <label class="block text-sm font-medium text-gray-700 mb-2">Paste Resume Text</label>
+            <textarea
+              [(ngModel)]="resumeText"
+              placeholder="Paste your resume text here..."
+              class="w-full h-40 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+            ></textarea>
+            <p class="text-xs text-gray-500 mt-2">Minimum 50 characters</p>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex space-x-4">
+            <button
+              (click)="onAnalyze()"
+              [disabled]="isLoading || !jobDescription.trim() || !resumeText.trim()"
+              class="flex-1 bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span *ngIf="!isLoading">Analyze & Optimize</span>
+              <span *ngIf="isLoading" class="flex items-center justify-center">
+                <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Analyzing...
+              </span>
+            </button>
+            <button
+              (click)="resetForm()"
+              class="px-6 bg-gray-300 text-gray-800 font-semibold py-3 rounded-lg hover:bg-gray-400 transition"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Results Tab -->
+        <div *ngIf="activeTab === 'results' && analysis" class="space-y-6">
+          <!-- ATS Score Card -->
+          <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">ATS Match Score</h2>
+            <div class="flex items-center justify-center">
+              <div class="relative w-32 h-32">
+                <svg class="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="54" fill="none" stroke="#e5e7eb" stroke-width="8" />
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="54"
+                    fill="none"
+                    [attr.stroke]="getAtsScoreColor() === 'green' ? '#10b981' : getAtsScoreColor() === 'yellow' ? '#f59e0b' : getAtsScoreColor() === 'orange' ? '#f97316' : '#ef4444'"
+                    stroke-width="8"
+                    stroke-dasharray="280"
+                    [attr.stroke-dashoffset]="280 - (analysis.atsScore / 100) * 280"
+                    stroke-linecap="round"
+                    style="transition: stroke-dashoffset 0.5s ease"
+                  />
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                  <span class="text-4xl font-bold" [ngClass]="getAtsScoreColor() === 'green' ? 'text-green-600' : getAtsScoreColor() === 'yellow' ? 'text-yellow-600' : getAtsScoreColor() === 'orange' ? 'text-orange-600' : 'text-red-600'">
+                    {{ analysis.atsScore }}
+                  </span>
+                  <span class="text-sm text-gray-600">/100</span>
+                </div>
+              </div>
+              <div class="ml-8">
+                <p class="text-xl font-semibold text-gray-900">{{ getAtsScoreText() }} Match</p>
+                <p class="text-gray-600 mt-2">Your resume matches {{ analysis.atsScore }}% of the job requirements</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Missing Keywords -->
+          <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Missing Keywords</h2>
+            <p class="text-sm text-gray-600 mb-4">Add these keywords to improve your ATS score:</p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                *ngFor="let keyword of analysis.missingKeywords"
+                (click)="copyToClipboard(keyword)"
+                class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 transition cursor-pointer"
+              >
+                {{ keyword }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Suggestions -->
+          <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Improvement Suggestions</h2>
+            <div class="space-y-4">
+              <div
+                *ngFor="let suggestion of analysis.suggestions"
+                class="border-l-4"
+                [ngClass]="suggestion.priority === 'high' ? 'border-red-500' : suggestion.priority === 'medium' ? 'border-yellow-500' : 'border-green-500'"
+              >
+                <div class="pl-4 py-2">
+                  <div class="flex items-center justify-between mb-1">
+                    <h3 class="font-semibold text-gray-900">{{ suggestion.suggestion }}</h3>
+                    <span
+                      class="px-2 py-1 text-xs font-semibold rounded-full"
+                      [ngClass]="suggestion.priority === 'high' ? 'bg-red-100 text-red-800' : suggestion.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'"
+                    >
+                      {{ suggestion.priority | uppercase }}
+                    </span>
+                  </div>
+                  <p class="text-sm text-gray-600">{{ suggestion.category }}</p>
+                  <p class="text-xs text-gray-500 mt-2">{{ suggestion.impact }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Optimized Resume -->
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-lg font-semibold text-gray-900">Optimized Resume</h2>
+              <button
+                (click)="downloadOptimizedResume()"
+                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
+              >
+                Download
+              </button>
+            </div>
+
+            <!-- Toggle View -->
+            <button
+              (click)="showOptimizedResume = !showOptimizedResume"
+              class="text-blue-600 text-sm font-medium hover:underline mb-4"
+            >
+              {{ showOptimizedResume ? 'Hide' : 'Show' }} Optimized Resume
+            </button>
+
+            <!-- Optimized Resume Preview -->
+            <div *ngIf="showOptimizedResume" class="bg-gray-50 rounded-lg p-4 border border-gray-300 max-h-96 overflow-y-auto">
+              <pre class="font-mono text-sm whitespace-pre-wrap break-words text-gray-800">{{ analysis.optimizedResume }}</pre>
+            </div>
+          </div>
+
+          <!-- Back Button -->
+          <button
+            (click)="activeTab = 'input'"
+            class="w-full px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition"
+          >
+            ← Back to Input
+          </button>
+        </div>
+      </div>
+
+      <!-- Info Section -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow p-6 sticky top-8">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">How It Works</h2>
+
+          <div class="space-y-6">
+            <div class="flex space-x-4">
+              <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-10 w-10 rounded-md bg-blue-600 text-white font-bold">
+                  1
+                </div>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900">Paste Job Description</h3>
+                <p class="text-sm text-gray-600 mt-1">Copy and paste the full job description</p>
+              </div>
+            </div>
+
+            <div class="flex space-x-4">
+              <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-10 w-10 rounded-md bg-blue-600 text-white font-bold">
+                  2
+                </div>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900">Upload Your Resume</h3>
+                <p class="text-sm text-gray-600 mt-1">Upload PDF or DOCX file or paste text</p>
+              </div>
+            </div>
+
+            <div class="flex space-x-4">
+              <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-10 w-10 rounded-md bg-blue-600 text-white font-bold">
+                  3
+                </div>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900">Get Analysis</h3>
+                <p class="text-sm text-gray-600 mt-1">Receive ATS score and optimization suggestions</p>
+              </div>
+            </div>
+
+            <div class="flex space-x-4">
+              <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-10 w-10 rounded-md bg-blue-600 text-white font-bold">
+                  4
+                </div>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900">Download & Apply</h3>
+                <p class="text-sm text-gray-600 mt-1">Download your optimized resume</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Benefits -->
+          <div class="mt-8 pt-6 border-t border-gray-200">
+            <h3 class="font-semibold text-gray-900 mb-4">Benefits</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li class="flex items-start">
+                <svg class="h-5 w-5 text-green-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Increase ATS keyword match
+              </li>
+              <li class="flex items-start">
+                <svg class="h-5 w-5 text-green-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Get specific improvement suggestions
+              </li>
+              <li class="flex items-start">
+                <svg class="h-5 w-5 text-green-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Optimize for each job application
+              </li>
+              <li class="flex items-start">
+                <svg class="h-5 w-5 text-green-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Increase interview callback rate
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,10 +1,11 @@
 """Analysis router with LangChain-powered endpoints."""
 
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.schemas.analysis import AnalyzeRequest, AnalyzeResponse
 from app.services.resume_analysis_service import ResumeAnalysisService
+from app.utils.file_parser import extract_resume_text
 
 router = APIRouter(prefix="/api/v1", tags=["analysis"])
 logger = logging.getLogger(__name__)
@@ -45,4 +46,23 @@ async def analyze(payload: AnalyzeRequest) -> AnalyzeResponse:
         raise HTTPException(
             status_code=500, detail=f"Analysis failed: {str(e)}"
         )
+
+
+@router.post("/extract-text")
+async def extract_text(file: UploadFile = File(...)):
+    """
+    Extract plain text from an uploaded PDF or DOCX resume file.
+
+    Returns:
+        JSON with `text` (extracted text) and `filename` fields.
+    """
+    try:
+        text = extract_resume_text(file)
+        return {"text": text, "filename": file.filename}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Text extraction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Text extraction failed: {str(e)}")
+
 
