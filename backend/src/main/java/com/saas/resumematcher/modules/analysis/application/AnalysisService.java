@@ -25,6 +25,7 @@ public class AnalysisService {
     ResumeAnalysisEntity entity =
         ResumeAnalysisEntity.builder()
             .userEmail(userEmail)
+            .resumeId(request.resumeId())
             .jobDescription(request.jobDescription())
             .resumeText(request.resumeText())
             .atsScore(aiResponse.atsScore())
@@ -47,6 +48,7 @@ public class AnalysisService {
   private AnalysisDtos.AnalyzeResponse map(ResumeAnalysisEntity entity, List<String> keywords) {
     return new AnalysisDtos.AnalyzeResponse(
         entity.getId(),
+        entity.getResumeId(),
         entity.getAtsScore(),
         keywords,
         entity.getOptimizedResume(),

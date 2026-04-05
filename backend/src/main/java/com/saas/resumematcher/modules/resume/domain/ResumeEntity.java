@@ -1,4 +1,4 @@
-package com.saas.resumematcher.modules.analysis.domain;
+package com.saas.resumematcher.modules.resume.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,13 +15,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "resume_analyses")
+@Table(name = "resumes")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ResumeAnalysisEntity {
+public class ResumeEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,31 +31,23 @@ public class ResumeAnalysisEntity {
   private String userEmail;
 
   @Column(nullable = false)
-  private Long resumeId;
+  private String fileName;
 
   @Lob
   @Column(nullable = false)
-  private String jobDescription;
+  private String extractedText;
 
   @Lob
   @Column(nullable = false)
-  private String resumeText;
+  private byte[] fileContent;
 
   @Column(nullable = false)
-  private Integer atsScore;
+  private String mimeType;
 
-  @Lob
   @Column(nullable = false)
-  private String extractedKeywords;
-
-  @Lob
-  @Column(nullable = false)
-  private String optimizedResume;
-
-  @Lob
-  @Column(nullable = false)
-  private String gapSummary;
+  private Instant uploadedAt;
 
   @Column(nullable = false)
   private Instant createdAt;
 }
+

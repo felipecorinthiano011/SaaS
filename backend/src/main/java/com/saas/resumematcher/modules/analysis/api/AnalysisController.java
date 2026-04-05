@@ -5,24 +5,35 @@ import com.saas.resumematcher.modules.analysis.application.AnalysisService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/analysis")
+@RequestMapping("/api/job")
 @RequiredArgsConstructor
 public class AnalysisController {
 
   private final AnalysisService analysisService;
 
-  @PostMapping
-  public AnalysisDtos.AnalyzeResponse analyze(
+  @PostMapping("/analyze")
+  public ResponseEntity<AnalysisDtos.AnalyzeResponse> analyze(
       Authentication authentication, @Valid @RequestBody AnalysisDtos.AnalyzeRequest request) {
-    return analysisService.analyzeResume(authentication.getName(), request);
+    AnalysisDtos.AnalyzeResponse response =
+        analysisService.analyzeResume(authentication.getName(), request);
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping("/{id}")
+  public ResponseEntity<AnalysisDtos.AnalyzeResponse> getAnalysis(
+      @PathVariable Long id, Authentication authentication) {
+    // TODO: Implement getAnalysis with proper authorization check
+    return ResponseEntity.ok(null);
   }
 
   @GetMapping
@@ -30,4 +41,3 @@ public class AnalysisController {
     return analysisService.listAnalyses(authentication.getName());
   }
 }
-
