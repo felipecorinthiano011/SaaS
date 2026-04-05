@@ -1,0 +1,64 @@
+<main class="mx-auto max-w-5xl p-6">
+  <section class="rounded-xl bg-white p-6 shadow">
+    <h1 class="text-2xl font-bold">LinkedIn Resume Optimizer</h1>
+    <p class="mt-2 text-sm text-slate-600">
+      Paste the job description and resume content to get ATS keyword and match insights.
+    </p>
+
+    <form (ngSubmit)="submit()" class="mt-6 space-y-4">
+      <div>
+        <label for="jobDescription" class="mb-1 block text-sm font-medium">LinkedIn Job Description</label>
+        <textarea
+          id="jobDescription"
+          name="jobDescription"
+          [(ngModel)]="jobDescription"
+          class="min-h-40 w-full rounded-lg border border-slate-300 p-3"
+          required
+        ></textarea>
+      </div>
+
+      <div>
+        <label for="resumeText" class="mb-1 block text-sm font-medium">Resume Text</label>
+        <textarea
+          id="resumeText"
+          name="resumeText"
+          [(ngModel)]="resumeText"
+          class="min-h-40 w-full rounded-lg border border-slate-300 p-3"
+          required
+        ></textarea>
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="isLoading"
+        class="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-60"
+      >
+        {{ isLoading ? 'Analyzing...' : 'Analyze Resume' }}
+      </button>
+    </form>
+
+    <p *ngIf="errorMessage" class="mt-4 text-sm text-red-600">{{ errorMessage }}</p>
+  </section>
+
+  <section *ngIf="analysis" class="mt-6 rounded-xl bg-white p-6 shadow">
+    <h2 class="text-xl font-semibold">Analysis Result</h2>
+    <p class="mt-2">ATS Match Score: <strong>{{ analysis.atsScore }}%</strong></p>
+
+    <h3 class="mt-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Extracted Keywords</h3>
+    <div class="mt-2 flex flex-wrap gap-2">
+      <span
+        *ngFor="let keyword of analysis.extractedKeywords"
+        class="rounded-full bg-indigo-50 px-3 py-1 text-sm text-indigo-700"
+      >
+        {{ keyword }}
+      </span>
+    </div>
+
+    <h3 class="mt-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Gap Summary</h3>
+    <p class="mt-2 text-sm">{{ analysis.gapSummary }}</p>
+
+    <h3 class="mt-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Optimized Resume Draft</h3>
+    <pre class="mt-2 overflow-auto rounded-lg bg-slate-100 p-3 text-sm">{{ analysis.optimizedResume }}</pre>
+  </section>
+</main>
+

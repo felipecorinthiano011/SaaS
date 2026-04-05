@@ -1,0 +1,30 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: resume-matcher-api
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/resume_optimizer}
+    username: ${SPRING_DATASOURCE_USERNAME:resume_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:resume_password}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:replace_with_a_very_long_dev_secret_key_min_32_chars}
+    expiration-seconds: ${JWT_EXPIRATION_SECONDS:3600}
+  ai-service:
+    base-url: ${AI_SERVICE_BASE_URL:http://localhost:8000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-resume_optimizer}
+      POSTGRES_USER: ${POSTGRES_USER:-resume_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resume_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  ai-service:
+    build:
+      context: ..
+      dockerfile: docker/ai-service.Dockerfile
+    environment:
+      AI_MODEL_NAME: gpt-4o-mini
+      AI_MINIMUM_KEYWORD_COUNT: 15
+    ports:
+      - "8000:8000"
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-resume_optimizer}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-resume_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-resume_password}
+      JWT_SECRET: ${JWT_SECRET:-cmVwbGFjZV93aXRoX2F0X2xlYXN0XzMyX2NoYXJzX2Jhc2U2NF9zZWNyZXQ=}
+      JWT_EXPIRATION_SECONDS: ${JWT_EXPIRATION_SECONDS:-3600}
+      AI_SERVICE_BASE_URL: http://ai-service:8000
+    depends_on:
+      - postgres
+      - ai-service
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend.Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+
+volumes:
+  postgres_data:
+
