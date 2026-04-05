@@ -149,13 +149,30 @@ class ResumeAnalysisService:
                 job_description, resume_text, keywords_data
             )
 
-            # Step 3: Calculate ATS score
-            matched_count = len(analysis_data.get("matched_keywords", []))
+            # Step 3: Calculate ATS score - improved logic
+            matched_keywords = analysis_data.get("matched_keywords", [])
+            matched_count = len(matched_keywords)
+
+            # Calculate total keywords from extracted data
             total_keywords = sum(
                 len(keywords_data.get(key, []))
                 for key in ["technical_keywords", "soft_skills", "certifications", "required_experience"]
             )
-            ats_score = self._calculate_ats_score(matched_count, total_keywords)
+
+            # Improved ATS score calculation
+            if total_keywords == 0:
+                # Fallback to word overlap if no keywords extracted
+                jd_tokens = set(job_description.lower().split())
+                resume_tokens = set(resume_text.lower().split())
+                overlap = len(jd_tokens & resume_tokens)
+                ats_score = min(100, max(0, int((overlap / max(len(jd_tokens), 1)) * 100)))
+            else:
+                # Calculate based on matched keywords
+                ats_score = self._calculate_ats_score(matched_count, total_keywords)
+
+            # Ensure ATS score is at least based on what was found
+            if ats_score == 0 and matched_count > 0:
+                ats_score = max(10, int((matched_count / max(total_keywords, 1)) * 100))
 
             # Step 4: Generate optimized resume
             optimized_resume = self._optimize_resume(
@@ -174,7 +191,7 @@ class ResumeAnalysisService:
             return {
                 "ats_score": ats_score,
                 "extracted_keywords": keywords_data,
-                "matched_keywords": analysis_data.get("matched_keywords", []),
+                "matched_keywords": matched_keywords,
                 "missing_keywords": analysis_data.get("missing_keywords", []),
                 "optimized_resume": optimized_resume,
                 "suggestions": suggestions,
@@ -266,10 +283,29 @@ class ResumeAnalysisService:
         chain = LLMChain(llm=self.llm, prompt=prompt)
         response = chain.run(
             resume_text=clean_text(resume_text),
-            missing_keywords=", ".join(missing_keywords[:10]),
+            missing_keywords=", ".join(missing_keywords[:15]) if missing_keywords else "None",
             job_description=clean_text(job_description),
         )
-        return clean_text(response)
+
+        # Clean and process the response
+        optimized = response.strip()
+
+        # Remove common markdown artifacts if present
+        if optimized.startswith("```"):
+            # Remove markdown code blocks
+            optimized = optimized.replace("```markdown", "").replace("```", "").strip()
+
+        # Ensure we have a valid resume (should have some content)
+        if not optimized or len(optimized) < 50:
+            logger.warning("Optimized resume appears too short, using fallback")
+            # Fallback: append keywords to original resume
+            optimized = resume_text.strip()
+            if missing_keywords:
+                optimized += f"\n\nKey Skills and Technologies:\n"
+                for keyword in missing_keywords[:10]:
+                    optimized += f"• {keyword}\n"
+
+        return clean_text(optimized)
 
     def _generate_suggestions(
         self, ats_score: int, missing_keywords: list, gaps_analysis: str

@@ -48,26 +48,29 @@ Provide analysis in JSON format (no markdown, no extra text):
 
 OPTIMIZE_RESUME_PROMPT = """
 You are an expert resume writer and ATS optimizer.
-Optimize the following resume to better match the job description and ATS requirements.
-Make the resume more impactful while keeping it truthful and professional.
+Your task is to optimize the following resume to better match the job description and maximize ATS score.
+Keep all original information truthful and accurate - only rephrase and reorganize.
 
 Original Resume:
 {resume_text}
 
-Missing Keywords that could be naturally incorporated:
+Missing Keywords to incorporate (where relevant):
 {missing_keywords}
 
-Job Requirements:
+Target Job Requirements:
 {job_description}
 
-Return the optimized resume text. Make it:
-1. More ATS-friendly (use standard formatting, clear section headers)
-2. Incorporate missing keywords naturally where relevant
-3. Use stronger action verbs
-4. Quantify achievements where possible
-5. Highlight relevant experience more prominently
+Create an optimized resume by:
+1. Reorganizing sections for ATS clarity (Contact, Summary, Experience, Skills, Education)
+2. Adding relevant missing keywords naturally into existing bullet points
+3. Using strong action verbs (Implemented, Developed, Led, Designed, etc.)
+4. Quantifying achievements with numbers where possible
+5. Expanding the Skills section to include all relevant keywords
+6. Ensuring consistent formatting and standard section headers
 
-Return ONLY the optimized resume text (no markdown formatting, no code blocks).
+IMPORTANT: Return the complete optimized resume text with all sections.
+Do NOT return markdown, code blocks, or extra explanation - ONLY the resume text.
+Make it professional and ready to submit.
 """
 
 GENERATE_SUGGESTIONS_PROMPT = """
