@@ -44,3 +44,23 @@ Then open:
 - Add refresh token flow and role-based authorization.
 - Add observability (OpenTelemetry, structured logs, tracing IDs).
 
+## CI/CD
+
+### GitHub Actions
+
+Push to your GitHub repository. Actions will automatically:
+- Test Python AI service (`pytest`)
+- Build Angular frontend (`ng build`)
+- Test Spring Boot backend (`mvn test`)
+
+See `.github/workflows/build-test.yml` for details.
+
+### GitLab CI
+
+Push to your GitLab instance. Pipelines will run tests for all services.
+
+See `.gitlab-ci.yml` for details.
+
+## Remote Repository Setup
+
+See `DEPLOYMENT_REMOTE.md` for step-by-step instructions on connecting to GitHub, GitLab, or self-hosted Git.
