@@ -18,34 +18,56 @@ except ImportError:
 
 def parse_pdf(file_path: str) -> str:
     """Extract text from PDF file."""
+    import logging
+    logger = logging.getLogger(__name__)
+
     if not pdfplumber:
         raise ImportError("pdfplumber is not installed. Install with: pip install pdfplumber")
 
     text = []
     try:
+        logger.info(f"Opening PDF file: {file_path}")
         with pdfplumber.open(file_path) as pdf:
-            for page in pdf.pages:
+            logger.info(f"PDF has {len(pdf.pages)} pages")
+            for idx, page in enumerate(pdf.pages):
                 page_text = page.extract_text()
                 if page_text:
+                    logger.info(f"Page {idx+1}: extracted {len(page_text)} characters")
                     text.append(page_text)
-        return "\n".join(text)
+                else:
+                    logger.warning(f"Page {idx+1}: no text extracted (might be image-only)")
+
+        result = "\n".join(text)
+        logger.info(f"Total extracted from PDF: {len(result)} characters")
+        return result
     except Exception as e:
+        logger.error(f"Failed to parse PDF: {str(e)}", exc_info=True)
         raise ValueError(f"Failed to parse PDF: {str(e)}")
 
 
 def parse_docx(file_path: str) -> str:
     """Extract text from DOCX file."""
+    import logging
+    logger = logging.getLogger(__name__)
+
     if not Document:
         raise ImportError("python-docx is not installed. Install with: pip install python-docx")
 
     text = []
     try:
+        logger.info(f"Opening DOCX file: {file_path}")
         doc = Document(file_path)
-        for paragraph in doc.paragraphs:
+        logger.info(f"DOCX has {len(doc.paragraphs)} paragraphs")
+
+        for idx, paragraph in enumerate(doc.paragraphs):
             if paragraph.text.strip():
                 text.append(paragraph.text)
-        return "\n".join(text)
+
+        result = "\n".join(text)
+        logger.info(f"Total extracted from DOCX: {len(result)} characters")
+        return result
     except Exception as e:
+        logger.error(f"Failed to parse DOCX: {str(e)}", exc_info=True)
         raise ValueError(f"Failed to parse DOCX: {str(e)}")
 
 
@@ -157,6 +179,9 @@ def extract_resume_text(file) -> str:
         >>> text = extract_resume_text(resume_file)
         >>> print(text)  # Clean resume text without emails/links
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
     # Convert file path to string if Path object
     if isinstance(file, Path):
         file_path = str(file)
@@ -166,6 +191,8 @@ def extract_resume_text(file) -> str:
         # Assume it's a file-like object with a name attribute
         if hasattr(file, 'filename'):
             file_name = file.filename
+            logger.info(f"Processing uploaded file: {file_name}")
+
             # For file objects, we need to save to temporary location
             import tempfile
             import shutil
@@ -180,21 +207,34 @@ def extract_resume_text(file) -> str:
                 file_path = temp_file.name
                 file_name_lower = file_name.lower()
 
+                logger.info(f"File size: {Path(file_path).stat().st_size} bytes")
+
                 # Parse the file
                 if file_name_lower.endswith('.pdf'):
+                    logger.info("Parsing PDF file...")
                     raw_text = parse_pdf(file_path)
                 elif file_name_lower.endswith(('.docx', '.doc')):
+                    logger.info("Parsing DOCX file...")
                     raw_text = parse_docx(file_path)
                 else:
                     raise ValueError(f"Unsupported file format: {file_name}. Only PDF and DOCX are supported.")
 
+                logger.info(f"Raw text extracted: {len(raw_text)} characters")
+
                 # Clean and return
-                return clean_text(raw_text)
+                cleaned_text = clean_text(raw_text)
+                logger.info(f"After cleaning: {len(cleaned_text)} characters")
+
+                if not cleaned_text.strip():
+                    logger.warning("Warning: Extracted text is empty after cleaning")
+
+                return cleaned_text
             finally:
                 # Clean up temporary file
                 import os
                 if os.path.exists(file_path):
                     os.unlink(file_path)
+                    logger.info("Temporary file deleted")
         else:
             raise ValueError("File input must be a file path (str/Path) or a file-like object with filename")
 

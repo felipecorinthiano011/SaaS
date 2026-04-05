@@ -57,12 +57,21 @@ async def extract_text(file: UploadFile = File(...)):
         JSON with `text` (extracted text) and `filename` fields.
     """
     try:
+        logger.info(f"Received file: {file.filename}, content-type: {file.content_type}, size: {file.size}")
+
         text = extract_resume_text(file)
+
+        if not text or not text.strip():
+            logger.warning(f"Warning: No text extracted from {file.filename}")
+            return {"text": "", "filename": file.filename}
+
+        logger.info(f"Successfully extracted {len(text)} characters from {file.filename}")
         return {"text": text, "filename": file.filename}
     except ValueError as e:
+        logger.error(f"Validation error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Text extraction failed: {str(e)}")
+        logger.error(f"Text extraction failed for {file.filename}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Text extraction failed: {str(e)}")
 
 
